@@ -17,17 +17,17 @@ PORT = 1025
 DEST_IP = "127.0.0.1"
 
 
-
 def udpSocket():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return s
 
+
 def sender():
-    user = User(raw_input("Enter your name: "))
+    user = User(input("Enter your name: "))
     s = udpSocket()
-    
+
     while True:
-        raw = raw_input()
+        raw = input()
         try:
             if int(raw) == -1:
                 sys.exit()
@@ -35,9 +35,10 @@ def sender():
             foo = 1
         
         message = user.buildMessage(raw)
-        print(message)
-        s.sendto(message, (DEST_IP, PORT))
-        
+        # print(message)
+        s.sendto(message.encode(), (DEST_IP, PORT))
+
+
 def receiver():
     
     s = udpSocket()
@@ -47,13 +48,14 @@ def receiver():
         while True:
             msgBytes, address = s.recvfrom(2048)
             m = helper.parse_message(msgBytes.decode())
-            displayMessage(m[0], m[1])
+            display_message(m[0], m[1])
     finally:
         s.close()
-        
-def displayMessage(userName, message):
-    curDate = dt.datetime.now()
-    print(''.join([re.sub('T', ' ', curDate.isoformat()), ' [', str(userName), ']: ', message]))
+
+
+def display_message(userName, message):
+    cur_date = dt.datetime.now()
+    print(''.join([re.sub('T', ' ', cur_date.isoformat()), ' [', str(userName), ']: ', message]))
         
     
 if __name__ == '__main__':
