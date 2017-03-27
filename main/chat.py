@@ -15,6 +15,7 @@ Created on Mar 27, 2017
 
 PORT = 1025
 DEST_IP = "127.0.0.1"
+LOCAL_BROADCAST = "255.255.255.255"
 
 
 def udpSocket():
@@ -26,6 +27,7 @@ def sender():
     user = User(input("Enter your name: "))
     print("Welcome " + user.name + " to the chat room. You can now chat!\nTo leave at anytime input -1")
     s = udpSocket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     while True:
         raw = input()
@@ -35,14 +37,14 @@ def sender():
             
         
         message = user.buildMessage(raw)
-        s.sendto(message.encode(), (DEST_IP, PORT))
+        s.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
 
 
 def receiver():
     
     s = udpSocket()
     try:
-        s.bind((DEST_IP, PORT))
+        s.bind(('', PORT))
         
         while True:
             msgBytes, address = s.recvfrom(2048)
