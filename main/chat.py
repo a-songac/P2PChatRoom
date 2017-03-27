@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from user import User
 import socket
@@ -6,7 +6,7 @@ import re
 import datetime as dt
 import helper
 import threading
-import sys
+import os
 '''
 Created on Mar 27, 2017
 
@@ -24,18 +24,17 @@ def udpSocket():
 
 def sender():
     user = User(input("Enter your name: "))
+    print("Welcome " + user.name + " to the chat room. You can now chat!\nTo leave at anytime input -1")
     s = udpSocket()
 
     while True:
         raw = input()
-        try:
-            if int(raw) == -1:
-                sys.exit()
-        except:
-            foo = 1
+        if isInt(raw):
+            print("Leaving Chat room")
+            os._exit(1)
+            
         
         message = user.buildMessage(raw)
-        # print(message)
         s.sendto(message.encode(), (DEST_IP, PORT))
 
 
@@ -56,7 +55,13 @@ def receiver():
 def display_message(userName, message):
     cur_date = dt.datetime.now()
     print(''.join([re.sub('T', ' ', cur_date.isoformat()), ' [', str(userName), ']: ', message]))
-        
+
+def isInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
     
 if __name__ == '__main__':
     print("Starting chat")
