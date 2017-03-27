@@ -1,7 +1,12 @@
+#!/usr/bin/python
+
 from user import User
 import socket
 import re
 import datetime as dt
+import helper
+import threading
+import sys
 '''
 Created on Mar 27, 2017
 
@@ -22,23 +27,39 @@ def sender():
     s = udpSocket()
     
     while True:
-        message = user.buildMessage(raw_input())
+        raw = raw_input()
+        try:
+            if int(raw) == -1:
+                sys.exit()
+        except:
+            foo = 1
+        
+        message = user.buildMessage(raw)
         print(message)
         s.sendto(message, (DEST_IP, PORT))
         
 def receiver():
-    s = udpSocket()
-    s.bind((DEST_IP, PORT))
     
-    while True:
-        message = s.recvfrom(2048)
+    s = udpSocket()
+    try:
+        s.bind((DEST_IP, PORT))
+        
+        while True:
+            msgBytes, address = s.recvfrom(2048)
+            m = helper.parse_message(msgBytes.decode())
+            displayMessage(m[0], m[1])
+    finally:
+        s.close()
         
 def displayMessage(userName, message):
     curDate = dt.datetime.now()
     print(''.join([re.sub('T', ' ', curDate.isoformat()), ' [', str(userName), ']: ', message]))
         
     
-    
+if __name__ == '__main__':
+    print("Starting chat")
+    threading.Thread(target=sender).start()
+    threading.Thread(target=receiver).start()
     
     
     

@@ -14,7 +14,7 @@ class User:
         return
 
     def buildMessage(self, message):
-        return ''.join(['user:'], self.name, '\nmessage:',message, '\n\n' )
+        return ''.join(['user:', self.name, '\nmessage:',message, '\n\n' ])
 
 
 # end User class
