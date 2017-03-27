@@ -14,11 +14,7 @@ class User:
         return
 
     def buildMessage(self, message):
-        curDate = dt.datetime.now()
-
-        return ''.join([re.sub('T', ' ', curDate.isoformat()), ' [', str(self.name), ']: ', message])
-
-
+        return ''.join(['user:'], self.name, '\nmessage:',message, '\n\n' )
 
 
 # end User class
