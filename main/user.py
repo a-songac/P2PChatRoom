@@ -1,3 +1,6 @@
+import datetime as dt
+import re
+
 '''
 Created on Mar 27, 2017
 
@@ -5,13 +8,18 @@ Created on Mar 27, 2017
 '''
 
 class User:
-    
+
     def __init__(self, name):
         self.name = name
         return
-    
+
     def buildMessage(self, message):
-        
-        return
-    
-    
+        curDate = dt.datetime.now()
+
+        return ''.join([re.sub('T', ' ', curDate.isoformat()), ' [', str(self.name), ']: ', message])
+
+
+
+
+# end User class
+
