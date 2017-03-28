@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 from user import User
 import socket
@@ -24,13 +24,13 @@ def udpSocket():
 
 
 def sender():
-    user = User(input("Enter your name: "))
+    user = User(raw_input("Enter your name: "))
     print("Welcome " + user.name + " to the chat room. You can now chat!\nTo leave at anytime input -1")
     s = udpSocket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     while True:
-        raw = input()
+        raw = raw_input()
         if isInt(raw):
             print("Leaving Chat room")
             os._exit(1)
