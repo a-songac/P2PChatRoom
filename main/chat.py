@@ -80,37 +80,36 @@ def receiver(user):
         while True:
             msgBytes, address = s.recvfrom(4096)
             m = helper.parse_message(str(msgBytes.decode()))
-            handleMessageReceived(s,user, m[0], m[1], m[2])
+            handleMessageReceived(s,user, address, m[0], m[1], m[2])
     finally:
         s.close()
 
 
-def handleMessageReceived(soc, curUser, userName, command, message):
-
+def handleMessageReceived(soc, curUser, senderAddress, senderName, command, message):
     cur_date_formatted = re.sub('T', ' ', dt.datetime.now().isoformat())
 
     if Command.JOIN == command:
-        print(''.join([cur_date_formatted, ' ', str(userName), ' joined!']))
-        ChatRoom.addUser(userName, "")
+        print(''.join([cur_date_formatted, ' ', str(senderName), ' joined!']))
+        ChatRoom.addUser(senderName, senderAddress[0])
         pingMessage = curUser.buildMessage(Command.PING, "")
         soc.sendto(pingMessage.encode(), (LOCAL_BROADCAST, PORT))
 
     elif Command.TALK == command:
-        print(''.join([cur_date_formatted, ' [', str(userName), ']: ', message]))
+        print(''.join([cur_date_formatted, ' [', str(senderName), ']: ', message]))
         
     elif Command.LEAVE == command:
-        print(''.join([cur_date_formatted, ' ', str(userName), ' left!']))
-        ChatRoom.removeUser(str(userName))
+        print(''.join([cur_date_formatted, ' ', str(senderName), ' left!']))
+        ChatRoom.removeUser(str(senderName))
         
     elif Command.QUIT == command:
         print('Bye now!\n')
         os._exit(1)
         
     elif Command.WHO == command:
-        print("Connected Users: " + ChatRoom.listUserNames())
+        print(''.join([cur_date_formatted, ' Connected Users: ', ChatRoom.listUserNames()]))
         
     elif Command.PING == command:
-        ChatRoom.addUser(userName,"")
+        ChatRoom.addUser(senderName, senderAddress[0])
 
 
 def parseUserCommand(message):
