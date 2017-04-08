@@ -11,7 +11,7 @@ class User:
         self.name = name
         return
 
-    def buildMessage(self, message, command='TALK'):
+    def buildMessage(self, command, message):
         return ''.join(['user:', self.name,
                          '\ncommand:', command, '\nmessage:',message, '\n\n' ])
 
