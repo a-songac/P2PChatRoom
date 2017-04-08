@@ -47,7 +47,7 @@ def receiver():
         s.bind(('', PORT))
         
         while True:
-            msgBytes, address = s.recvfrom(2048)
+            msgBytes, address = s.recvfrom(4096)
             m = helper.parse_message(msgBytes.decode())
             display_message(m[0], m[1])
     finally:

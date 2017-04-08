@@ -1,5 +1,3 @@
-import datetime as dt
-import re
 
 '''
 Created on Mar 27, 2017
@@ -13,8 +11,9 @@ class User:
         self.name = name
         return
 
-    def buildMessage(self, message):
-        return ''.join(['user:', self.name, '\nmessage:',message, '\n\n' ])
+    def buildMessage(self, message, command='TALK'):
+        return ''.join(['user:', self.name,
+                         '\ncommand:', command, '\nmessage:',message, '\n\n' ])
 
 
 # end User class

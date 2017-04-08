@@ -1,7 +1,7 @@
 import re
 
 
-# Return list[user, userMessage]
+# Return list[user, command, message]
 def parse_message(message):
     content = list()
     lines = message.split('\n')
