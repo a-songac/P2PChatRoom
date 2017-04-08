@@ -32,7 +32,7 @@ class ChatRoom:
     @staticmethod  
     def addUser(name, ip):
         if name not in ChatRoom.participants.keys():
-            ChatRoom.participants[name] = ip
+            ChatRoom.participants[ip] = name
             
     @staticmethod  
     def removeUser(name):
@@ -41,7 +41,7 @@ class ChatRoom:
             
     @staticmethod
     def listUserNames():
-            return str(ChatRoom.participants.keys())
+            return str(ChatRoom.participants.values())
             
 
 def udpSocket():
@@ -52,7 +52,6 @@ def udpSocket():
 
 def sender(user):
     user.name = raw_input("Enter your name: ")
-    ChatRoom.addUser(user.name, LOCALHOST)
     print("Welcome " + user.name + " to the chat room. You can now chat!")
     s = udpSocket()
 
@@ -132,9 +131,12 @@ def handleUserCommand(soc, user, action, content):
         soc.sendto(leaveMessage.encode(), (LOCAL_BROADCAST, PORT))
         soc.sendto(quitMessage.encode(), (LOCALHOST, PORT))
         
-    if Command.WHO == action:
+    elif Command.WHO == action:
         message = user.buildMessage(Command.WHO, '')
         soc.sendto(message.encode(), (LOCALHOST, PORT))
+        
+    else:
+        print("Command not found")
         
         
 
