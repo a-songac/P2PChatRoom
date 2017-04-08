@@ -20,6 +20,7 @@ LOCAL_BROADCAST = "255.255.255.255"
 class Command:
     JOIN = 'JOIN'
     TALK = 'TALK'
+    LEAVE = 'LEAVE'
 
 
 def udpSocket():
@@ -29,7 +30,7 @@ def udpSocket():
 
 def sender():
     user = User(raw_input("Enter your name: "))
-    print("Welcome " + user.name + " to the chat room. You can now chat!\nTo leave at anytime input -1")
+    print("Welcome " + user.name + " to the chat room. You can now chat!")
     s = udpSocket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
@@ -38,13 +39,19 @@ def sender():
 
     while True:
         raw = raw_input()
-        if isInt(raw):
-            print("Leaving Chat room")
-            os._exit(1)
+        command = parseUserCommand(raw)
+        
+        if command is not None:
+            action = command[0].upper()
+            content = ''
+            if len(command) > 1:
+                content = command[1]
+                
+            handleUserCommand(s, user, action, content)
 
-
-        message = user.buildMessage(Command.TALK, raw)
-        s.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
+        else:
+            message = user.buildMessage(Command.TALK, raw)
+            s.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
 
 
 def receiver():
@@ -56,12 +63,12 @@ def receiver():
         while True:
             msgBytes, address = s.recvfrom(4096)
             m = helper.parse_message(msgBytes.decode())
-            handle_message(m[0], m[1], m[2])
+            handleMessageReceived(m[0], m[1], m[2])
     finally:
         s.close()
 
 
-def handle_message(userName, command, message):
+def handleMessageReceived(userName, command, message):
 
     cur_date_formatted = re.sub('T', ' ', dt.datetime.now().isoformat())
 
@@ -70,14 +77,25 @@ def handle_message(userName, command, message):
 
     elif Command.TALK == command:
         print(''.join([cur_date_formatted, ' [', str(userName), ']: ', message]))
+        
+    elif Command.LEAVE == command:
+        print(''.join([cur_date_formatted, ' ', str(userName), ' left!']))
 
 
-def isInt(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+def parseUserCommand(message):
+    command = re.match("\/(.+)", message, re.IGNORECASE)
+    if command is not None:
+        return command.group(1).split()
+    return None
+
+
+def handleUserCommand(soc, user, action, content):
+    if Command.LEAVE == action:
+        message = user.buildMessage(Command.LEAVE, '')
+        print('Goodbye!')
+        soc.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
+        os._exit(1)
+        
 
 if __name__ == '__main__':
     print("Starting chat")
