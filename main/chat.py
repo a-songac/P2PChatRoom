@@ -14,13 +14,14 @@ Created on Mar 27, 2017
 '''
 
 PORT = 1025
-DEST_IP = "127.0.0.1"
+LOCALHOST = "127.0.0.1"
 LOCAL_BROADCAST = "255.255.255.255"
 
 class Command:
     JOIN = 'JOIN'
     TALK = 'TALK'
     LEAVE = 'LEAVE'
+    QUIT = 'QUIT'
 
 
 def udpSocket():
@@ -42,12 +43,7 @@ def sender():
         command = parseUserCommand(raw)
         
         if command is not None:
-            action = command[0].upper()
-            content = ''
-            if len(command) > 1:
-                content = command[1]
-                
-            handleUserCommand(s, user, action, content)
+            handleUserCommand(s, user, command[0], command[1])
 
         else:
             message = user.buildMessage(Command.TALK, raw)
@@ -80,21 +76,32 @@ def handleMessageReceived(userName, command, message):
         
     elif Command.LEAVE == command:
         print(''.join([cur_date_formatted, ' ', str(userName), ' left!']))
+        
+    elif Command.QUIT == command:
+        print('Bye now!\n')
+        os._exit(1)
 
 
 def parseUserCommand(message):
     command = re.match("\/(.+)", message, re.IGNORECASE)
     if command is not None:
-        return command.group(1).split()
+        command = command.group(1).split()
+        action = command[0].upper()
+        content = ''
+        if len(command) > 1:
+            content = command[1]
+        return (action, content)
+    
     return None
 
 
 def handleUserCommand(soc, user, action, content):
     if Command.LEAVE == action:
-        message = user.buildMessage(Command.LEAVE, '')
-        print('Goodbye!')
-        soc.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
-        os._exit(1)
+        leaveMessage = user.buildMessage(Command.LEAVE, '')
+        quitMessage = user.buildMessage(Command.QUIT, '')
+        soc.sendto(leaveMessage.encode(), (LOCAL_BROADCAST, PORT))
+        soc.sendto(quitMessage.encode(), (LOCALHOST, PORT))
+        
         
 
 if __name__ == '__main__':
