@@ -22,18 +22,39 @@ class Command:
     TALK = 'TALK'
     LEAVE = 'LEAVE'
     QUIT = 'QUIT'
+    WHO = 'WHO'
+    PING = 'PING'
 
+class ChatRoom:
+    
+    participants = {}
+    
+    @staticmethod  
+    def addUser(name, ip):
+        if name not in ChatRoom.participants.keys():
+            ChatRoom.participants[name] = ip
+            
+    @staticmethod  
+    def removeUser(name):
+        if name in ChatRoom.participants.keys():
+            del ChatRoom.participants[name]
+            
+    @staticmethod
+    def listUserNames():
+            return str(ChatRoom.participants.keys())
+            
 
 def udpSocket():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     return s
 
 
-def sender():
-    user = User(raw_input("Enter your name: "))
+def sender(user):
+    user.name = raw_input("Enter your name: ")
+    ChatRoom.addUser(user.name, LOCALHOST)
     print("Welcome " + user.name + " to the chat room. You can now chat!")
     s = udpSocket()
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     joinMessage = user.buildMessage(Command.JOIN, ''.join([user.name, ' joined!']))
     s.sendto(joinMessage.encode(), (LOCAL_BROADCAST, PORT))
@@ -50,7 +71,7 @@ def sender():
             s.sendto(message.encode(), (LOCAL_BROADCAST, PORT))
 
 
-def receiver():
+def receiver(user):
 
     s = udpSocket()
     try:
@@ -58,28 +79,38 @@ def receiver():
 
         while True:
             msgBytes, address = s.recvfrom(4096)
-            m = helper.parse_message(msgBytes.decode())
-            handleMessageReceived(m[0], m[1], m[2])
+            m = helper.parse_message(str(msgBytes.decode()))
+            handleMessageReceived(s,user, m[0], m[1], m[2])
     finally:
         s.close()
 
 
-def handleMessageReceived(userName, command, message):
+def handleMessageReceived(soc, curUser, userName, command, message):
 
     cur_date_formatted = re.sub('T', ' ', dt.datetime.now().isoformat())
 
     if Command.JOIN == command:
         print(''.join([cur_date_formatted, ' ', str(userName), ' joined!']))
+        ChatRoom.addUser(userName, "")
+        pingMessage = curUser.buildMessage(Command.PING, "")
+        soc.sendto(pingMessage.encode(), (LOCAL_BROADCAST, PORT))
 
     elif Command.TALK == command:
         print(''.join([cur_date_formatted, ' [', str(userName), ']: ', message]))
         
     elif Command.LEAVE == command:
         print(''.join([cur_date_formatted, ' ', str(userName), ' left!']))
+        ChatRoom.removeUser(str(userName))
         
     elif Command.QUIT == command:
         print('Bye now!\n')
         os._exit(1)
+        
+    elif Command.WHO == command:
+        print("Connected Users: " + ChatRoom.listUserNames())
+        
+    elif Command.PING == command:
+        ChatRoom.addUser(userName,"")
 
 
 def parseUserCommand(message):
@@ -102,12 +133,17 @@ def handleUserCommand(soc, user, action, content):
         soc.sendto(leaveMessage.encode(), (LOCAL_BROADCAST, PORT))
         soc.sendto(quitMessage.encode(), (LOCALHOST, PORT))
         
+    if Command.WHO == action:
+        message = user.buildMessage(Command.WHO, '')
+        soc.sendto(message.encode(), (LOCALHOST, PORT))
+        
         
 
 if __name__ == '__main__':
     print("Starting chat")
-    threading.Thread(target=receiver).start()
-    threading.Thread(target=sender).start()
+    user = User("")
+    threading.Thread(target=receiver, args=[user]).start()
+    threading.Thread(target=sender, args=[user]).start()
 
 
 
