@@ -26,7 +26,7 @@ def choiceFromRange(choices):
     while wrong:
         choice = raw_input("Wrong selection, please retry: ")
         wrong = not isInt(choice) or int(choice) < 1 or int(choice) > len(choices)
-    return int(choice)
+    return choices[int(choice)-1]
             
             
 def isInt(value):

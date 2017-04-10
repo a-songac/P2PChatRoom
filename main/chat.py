@@ -25,6 +25,7 @@ class Command:
     QUIT = 'QUIT'
     WHO = 'WHO'
     PING = 'PING'
+    PRIVATE = 'PRIVATE'
 
 class ChatRoom:
     
@@ -43,6 +44,10 @@ class ChatRoom:
     @staticmethod
     def listUserNames():
             return str(ChatRoom.participants.values())
+        
+    @staticmethod
+    def ipsForUsername(userName):
+        return {k: v for k, v in ChatRoom.participants.iteritems() if v == userName}
             
 
 def udpSocket():
@@ -106,10 +111,17 @@ def handleMessageReceived(soc, port, curUser, senderAddress, senderName, command
         os._exit(1)
         
     elif Command.WHO == command:
-        print(''.join([cur_date_formatted, ' Connected Users: ', ChatRoom.listUserNames()]))
+        if message == 'ip':
+            print(''.join([cur_date_formatted, ' Connected Users: ', str(ChatRoom.participants.items())]))
+        else:
+            print(''.join([cur_date_formatted, ' Connected Users: ', ChatRoom.listUserNames()]))
         
     elif Command.PING == command:
         ChatRoom.addUser(senderName, senderAddress[0])
+        
+    elif Command.PRIVATE == command:
+        print(''.join([cur_date_formatted, ' [', str(senderName), '] (PRIVATE): ', message]))
+        
 
 
 def parseUserCommand(message):
@@ -133,9 +145,31 @@ def handleUserCommand(soc, port, user, action, content):
         soc.sendto(quitMessage.encode(), (LOCALHOST, port))
         
     elif Command.WHO == action:
-        message = user.buildMessage(Command.WHO, '')
+        message = user.buildMessage(Command.WHO, content)
         soc.sendto(message.encode(), (LOCALHOST, port))
         
+    elif Command.PRIVATE == action:
+        if content != "" and content in ChatRoom.listUserNames():
+            destinationIp = ""
+            destinations = ChatRoom.ipsForUsername(content)
+            if len(destinations) > 1:
+                print("More than one user in the chat room with user name " + content + ". You may know the IP address of the right " + content + "?")
+                destinationIp = helper.choiceFromRange(destinations.keys())
+            
+            else:
+                destinationIp = destinations.keys()[0]
+                
+            rawMessage = raw_input("Private message to " + content + ": ")
+            message = user.buildMessage(Command.PRIVATE, rawMessage)
+            soc.sendto(message.encode(), (destinationIp, port))
+            
+            #print copy in sender room too
+            cur_date_formatted = re.sub('T', ' ', dt.datetime.now().isoformat())
+            print(''.join([cur_date_formatted, ' [', str(user.name), '] (PRIVATE): ', rawMessage]))
+            
+        else:
+            print("No such user " + content)
+                
     else:
         print("Command not found")
         
