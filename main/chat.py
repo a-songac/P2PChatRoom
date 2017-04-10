@@ -26,10 +26,13 @@ class Command:
     WHO = 'WHO'
     PING = 'PING'
     PRIVATE = 'PRIVATE'
+    CHANNEL = 'CHANNEL'
 
 class ChatRoom:
     
     participants = {}
+    
+    channel = 'general'
     
     @staticmethod  
     def addUser(name, ip):
@@ -72,7 +75,7 @@ def sender(user, port):
             handleUserCommand(s, port, user, command[0], command[1])
 
         else:
-            message = user.buildMessage(Command.TALK, raw)
+            message = user.buildMessage(Command.TALK, raw, ChatRoom.channel)
             s.sendto(message.encode(), (LOCAL_BROADCAST, port))
 
 
@@ -85,12 +88,12 @@ def receiver(user, port):
         while True:
             msgBytes, address = s.recvfrom(4096)
             m = helper.parse_message(str(msgBytes.decode()))
-            handleMessageReceived(s, port, user, address, m[0], m[1], m[2])
+            handleMessageReceived(s, port, user, address, m[0], m[1], m[2], m[3])
     finally:
         s.close()
 
 
-def handleMessageReceived(soc, port, curUser, senderAddress, senderName, command, message):
+def handleMessageReceived(soc, port, curUser, senderAddress, senderName, command, message, channel):
     cur_date_formatted = re.sub('T', ' ', dt.datetime.now().isoformat())
 
     if Command.JOIN == command:
@@ -100,7 +103,8 @@ def handleMessageReceived(soc, port, curUser, senderAddress, senderName, command
         soc.sendto(pingMessage.encode(), (LOCAL_BROADCAST, port))
 
     elif Command.TALK == command:
-        print(''.join([cur_date_formatted, ' [', str(senderName), ']: ', message]))
+        if channel == ChatRoom.channel:
+            print(''.join([cur_date_formatted, ' [', str(senderName), ' #', channel, ']: ', message]))
         
     elif Command.LEAVE == command:
         print(''.join([cur_date_formatted, ' ', str(senderName), ' left!']))
@@ -169,6 +173,13 @@ def handleUserCommand(soc, port, user, action, content):
             
         else:
             print("No such user " + content)
+    
+    elif Command.CHANNEL == action:
+        if content != "":
+            ChatRoom.channel = content
+            print("Switched to channel " + content)
+        else:
+            print("Cannot switch to empty channel")
                 
     else:
         print("Command not found")
