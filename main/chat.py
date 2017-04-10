@@ -40,9 +40,9 @@ class ChatRoom:
             ChatRoom.participants[ip] = name
             
     @staticmethod  
-    def removeUser(name):
-        if name in ChatRoom.participants.keys():
-            del ChatRoom.participants[name]
+    def removeUser(ipaddress):
+        if ipaddress in ChatRoom.participants.keys():
+            del ChatRoom.participants[ipaddress]
             
     @staticmethod
     def listUserNames():
@@ -108,7 +108,7 @@ def handleMessageReceived(soc, port, curUser, senderAddress, senderName, command
         
     elif Command.LEAVE == command:
         print(''.join([cur_date_formatted, ' ', str(senderName), ' left!']))
-        ChatRoom.removeUser(str(senderName))
+        ChatRoom.removeUser(senderAddress[0])
         
     elif Command.QUIT == command:
         print('Bye now!\n')
